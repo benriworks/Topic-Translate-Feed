@@ -15,14 +15,19 @@ interface RouteParams {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   const { slug } = await params;
 
-  // TODO: Add authentication/authorization check here
-  // Example: Check for API key in headers
-  // const apiKey = request.headers.get('X-API-Key');
-  // if (!apiKey || apiKey !== process.env.ADMIN_API_KEY) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  // }
+  // Authentication check - if ADMIN_API_KEY is set, require it
+  const adminApiKey = process.env.ADMIN_API_KEY;
+  if (adminApiKey) {
+    const requestApiKey = request.headers.get('X-API-Key');
+    if (!requestApiKey || requestApiKey !== adminApiKey) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
 
   try {
+    // Note: Using createGenericServerSupabaseClient() because manual Database types
+    // don't fully integrate with supabase-js type inference. The double type assertions
+    // (as unknown as Type) are necessary but the data is properly validated at runtime.
     const supabase = createGenericServerSupabaseClient();
 
     // 1. Get topic by slug

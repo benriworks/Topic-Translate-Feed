@@ -5,17 +5,32 @@ export interface RawTweet {
   id: string;
   text: string;
   created_at: string;
-  author: {
-    id: string;
-    name: string;
-    username: string;
-    profile_image_url: string | null;
-  };
-  public_metrics: {
-    like_count: number;
-    retweet_count: number;
-    reply_count: number;
-  };
+  author: TweetAuthor;
+  public_metrics: TweetPublicMetrics;
+}
+
+// Author information from X API
+export interface TweetAuthor {
+  id: string;
+  name: string;
+  username: string;
+  profile_image_url: string | null;
+}
+
+// Public metrics from X API
+export interface TweetPublicMetrics {
+  like_count: number;
+  retweet_count: number;
+  reply_count: number;
+}
+
+// X API response structure for tweets
+interface XApiTweetResponse {
+  id: string;
+  text: string;
+  created_at: string;
+  author_id: string;
+  public_metrics: TweetPublicMetrics;
 }
 
 /**
@@ -70,7 +85,7 @@ export async function fetchTweetsForTopic(topic: Topic): Promise<RawTweet[]> {
     }
 
     // Map users by ID for easy lookup
-    const usersById = new Map<string, { id: string; name: string; username: string; profile_image_url: string | null }>();
+    const usersById = new Map<string, TweetAuthor>();
     for (const user of data.includes.users) {
       usersById.set(user.id, {
         id: user.id,
@@ -81,7 +96,7 @@ export async function fetchTweetsForTopic(topic: Topic): Promise<RawTweet[]> {
     }
 
     // Transform API response to RawTweet format
-    const tweets: RawTweet[] = data.data.map((tweet: { id: string; text: string; created_at: string; author_id: string; public_metrics: { like_count: number; retweet_count: number; reply_count: number } }) => {
+    const tweets: RawTweet[] = data.data.map((tweet: XApiTweetResponse) => {
       const author = usersById.get(tweet.author_id) || {
         id: tweet.author_id,
         name: 'Unknown',

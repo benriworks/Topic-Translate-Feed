@@ -23,9 +23,7 @@ export function Pagination({ currentPage, totalPages, baseUrl }: PaginationProps
   }
 
   const getPageUrl = (page: number) => {
-    const url = new URL(baseUrl, 'http://localhost');
-    url.searchParams.set('page', page.toString());
-    return `${url.pathname}${url.search}`;
+    return `${baseUrl}?page=${page}`;
   };
 
   return (
